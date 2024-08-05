@@ -1,0 +1,11 @@
+.idea/
+*.pyc
+.ipynb_checkpoints/
+__pycache__/
+.env
+__pycache__/*
+.env-example
+.DS_Store
+.vscode/launch.json
+manage.py
+logs/
