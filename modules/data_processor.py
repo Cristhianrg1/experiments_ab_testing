@@ -74,6 +74,24 @@ class ExperimentProcessor:
         ].copy()
         return experiments_df
 
+    def get_non_experiments_data(self) -> pd.DataFrame:
+        """
+        Creates a new DataFrame by expanding the 'experiments' column of the original DataFrame.
+
+        Returns:
+            pd.DataFrame: New DataFrame with expanded rows for each experiment and variant.
+        """
+        experiments_df = experiments_df = self.data[
+            self.data["event_name"].isin(
+                ["BUY", "CHECKOUT_1", "CHECKOUT_2", "CHECKOUT_3"]
+            )
+        ].copy()
+        expanded_data = experiments_df.apply(self.expand_experiments, axis=1)
+        expanded_df = pd.DataFrame(
+            [item for sublist in expanded_data for item in sublist]
+        )
+        return expanded_df
+
     def get_experimets_data(self) -> pd.DataFrame:
         """
         Creates a new DataFrame by expanding the 'experiments' column of the original DataFrame.
@@ -158,7 +176,6 @@ class ExperimentProcessor:
             subset=[
                 "event_name",
                 "item_id",
-                "timestamp",
                 "experiment_name",
                 "variant_id",
                 "user_id",
@@ -183,4 +200,3 @@ class ExperimentProcessor:
             lambda x: x["variant_id"].nunique() >= 2
         )
         return merge_df
-    
