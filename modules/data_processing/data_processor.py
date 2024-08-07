@@ -196,7 +196,4 @@ class ExperimentProcessor:
         merge_df["with_purchase"] = np.where(
             ~merge_df["item_id_purchase"].isna(), True, False
         )
-        merge_df = merge_df.groupby("experiment_name").filter(
-            lambda x: x["variant_id"].nunique() >= 2
-        )
         return merge_df

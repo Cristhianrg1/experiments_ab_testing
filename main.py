@@ -7,7 +7,7 @@ from flask import request, jsonify
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Run A/B Test API')
-    parser.add_argument('--host', type=str, default='127.0.0.1', help='Host for the API server (default: 127.0.0.1)')
+    parser.add_argument('--host', type=str, default='0.0.0.0', help='Host for the API server (default: 127.0.0.1)')
     parser.add_argument('--port', type=int, default=5000, help='Port for the API server (default: 5000)')
     return parser.parse_args()
 
