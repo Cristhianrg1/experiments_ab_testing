@@ -158,7 +158,7 @@ from urllib.parse import quote
 experiment_id = "filters/sort-by-ranking"
 day = "2021-08-02 00"
 encoded_experiment_id = quote(experiment_id, safe='')
-url = f"http://127.0.0.1:5001/experiment/{encoded_experiment_id}/result"
+url = f"http://127.0.0.1:5000/experiment/{encoded_experiment_id}/result"
 params = {
     "day": day
 }
