@@ -5,23 +5,27 @@ import numpy as np
 class ExperimentProcessor:
     def __init__(self, data):
         """
-        Initializes the class with a DataFrame.
+        Inicializa la clase con un DataFrame.
 
         Args:
-            data (pd.DataFrame): DataFrame containing an 'experiments' column with experiment strings.
+            data (pd.DataFrame): DataFrame que contiene una columna 'experiments'
+            con cadenas de experimentos.
+
         """
         self.data = data
 
     @staticmethod
     def convert_to_dict(exp_string: str) -> dict:
         """
-        Converts a string representing a dictionary of experiments into a Python dictionary.
+        Convierte una cadena que representa un diccionario
+        de experimentos en un diccionario de Python.
 
         Args:
-            exp_string (str): String formatted as `{key1=value1, key2=value2, ...}`.
+            exp_string (str): Cadena con formato {key1=value1, key2=value2, ...}.
 
         Returns:
-            dict: Dictionary where the keys are experiment names and the values are variant IDs.
+            dict: Diccionario donde las claves son nombres de experimentos
+            y los valores son ids de variantes.
         """
         exp_string = exp_string.strip("{}")
         items = exp_string.split(", ")
@@ -30,13 +34,16 @@ class ExperimentProcessor:
 
     def expand_experiments(self, row: pd.Series) -> list:
         """
-        Expands the 'experiments' string into multiple rows, one for each experiment and variant.
+        Expande el texto de la columna experiments en varias filas,
+        una para cada experimento y variante.
 
         Args:
-            row (pd.Series): DataFrame row containing an 'experiments' column with a string of experiments.
+            row (pd.Series): Fila del DataFrame que contiene la columna experiments
+            con una serie de experimentos.
 
         Returns:
-            list: List of dictionaries, where each dictionary represents an expanded row with additional columns for 'experiment_name' and 'variant_id'.
+            list: Lista de diccionarios, donde cada diccionario representa una
+            fila expandida con columnas adicionales para experiment_name y variant_id.
         """
         experiments_dict = self.convert_to_dict(row["experiments"])
         expanded_rows = [
@@ -53,33 +60,32 @@ class ExperimentProcessor:
         return expanded_rows
 
     def get_purchases_data(self) -> pd.DataFrame:
-        """_summary_
+        """
+        Obtiene un DataFrame con los datos de compras.
 
         Returns:
-            pd.DataFrame: New DataFrame with  purchases data
+            pd.DataFrame: Nuevo DataFrame con los datos de compras.
         """
         purchases_df = self.data[self.data["event_name"] == "BUY"].copy()
         return purchases_df
 
     def filter_non_purchase_events(self) -> pd.DataFrame:
-        """_summary_
+        """
+        Filtra los eventos que no son compras.
 
         Returns:
-            pd.DataFrame: _description_
+            pd.DataFrame: DataFrame filtrado sin eventos de compra.
         """
-        experiments_df = self.data[
-            ~self.data["event_name"].isin(
-                ["BUY", "CHECKOUT_1", "CHECKOUT_2", "CHECKOUT_3"]
-            )
-        ].copy()
+        experiments_df = self.data[~self.data["event_name"].isin(["BUY"])].copy()
         return experiments_df
 
     def get_non_experiments_data(self) -> pd.DataFrame:
         """
-        Creates a new DataFrame by expanding the 'experiments' column of the original DataFrame.
+        Crea un nuevo DataFrame con los eventos no considerados
+        como parte de los experimentos.
 
         Returns:
-            pd.DataFrame: New DataFrame with expanded rows for each experiment and variant.
+            pd.DataFrame: Nuevo DataFrame con filas expandidas.
         """
         experiments_df = experiments_df = self.data[
             self.data["event_name"].isin(
@@ -94,10 +100,12 @@ class ExperimentProcessor:
 
     def get_experimets_data(self) -> pd.DataFrame:
         """
-        Creates a new DataFrame by expanding the 'experiments' column of the original DataFrame.
+        Crea un nuevo DataFrame con lo eventos de experimentos
+        y la columna de experimentos expandida.
 
         Returns:
-            pd.DataFrame: New DataFrame with expanded rows for each experiment and variant.
+            pd.DataFrame: Nuevo DataFrame con filas expandidas
+            para cada experimento y variante.
         """
         experiments_df = self.filter_non_purchase_events()
         expanded_data = experiments_df.apply(self.expand_experiments, axis=1)
@@ -108,14 +116,25 @@ class ExperimentProcessor:
 
     @staticmethod
     def product_event_and_purchase(experiments: pd.DataFrame, purchases: pd.DataFrame):
-        experiments = experiments[experiments["event_name"] == "PRODUCT"].copy()
+        """
+        Relaciona eventos de productos con compras dentro de una ventana
+        de tiempo de 4 horas
+
+        Args:
+            experiments (pd.DataFrame): DataFrame con eventos de experimentos.
+            purchases (pd.DataFrame): DataFrame con eventos de compra.
+
+        Returns:
+            pd.DataFrame: DataFrame fusionado con información de productos y compras.
+        """
+        experiments = experiments[~experiments["event_name"].isin(["SEARCH"])].copy()
         experiments["timestamp"] = pd.to_datetime(experiments["timestamp"])
 
         purchases["timestamp"] = pd.to_datetime(purchases["timestamp"])
         purchases["timestamp2"] = purchases["timestamp"]
         purchases["item_id_purchase"] = purchases["item_id"]
 
-        time_window = pd.Timedelta("1 day")
+        time_window = pd.Timedelta(hours=4)
 
         merged_df = pd.merge(
             experiments,
@@ -133,12 +152,19 @@ class ExperimentProcessor:
             merged_df["item_id"],
             np.nan,
         )
+        merged_df["timestamp_purchase"] = np.where(
+            (merged_df["timestamp_purchase"] >= merged_df["timestamp"])
+            & (merged_df["timestamp_purchase"] <= merged_df["timestamp"] + time_window),
+            merged_df["timestamp_purchase"],
+            np.nan,
+        )
 
-        merged_df = merged_df.sort_values(by="item_id_purchase").drop_duplicates(
+        merged_df = merged_df.sort_values(
+            by=["timestamp", "timestamp_purchase", "item_id_purchase"]
+        ).drop_duplicates(
             subset=[
                 "event_name",
                 "item_id",
-                "timestamp",
                 "experiment_name",
                 "variant_id",
                 "user_id",
@@ -150,6 +176,17 @@ class ExperimentProcessor:
 
     @staticmethod
     def search_event_and_purchase(experiments: pd.DataFrame, purchases: pd.DataFrame):
+        """
+        Relaciona eventos de búsqueda con compras dentro de una ventana
+        de tiempo de 8 horas.
+
+        Args:
+            experiments (pd.DataFrame): DataFrame con eventos de experimentos.
+            purchases (pd.DataFrame): DataFrame con eventos de compra.
+
+        Returns:
+            pd.DataFrame: DataFrame fusionado con información de búsquedas y compras.
+        """
         experiments = experiments[experiments["event_name"] == "SEARCH"].copy()
         experiments["timestamp"] = pd.to_datetime(experiments["timestamp"])
         experiments = experiments.groupby("experiment_name").filter(
@@ -159,7 +196,7 @@ class ExperimentProcessor:
         purchases["timestamp"] = pd.to_datetime(purchases["timestamp"])
         purchases["timestamp2"] = purchases["timestamp"]
 
-        time_window = pd.Timedelta("1 day")
+        time_window = pd.Timedelta(hours=8)
         merged_df = pd.merge_asof(
             experiments.sort_values("timestamp"),
             purchases[["user_id", "timestamp", "item_id", "timestamp2"]].sort_values(
@@ -172,7 +209,9 @@ class ExperimentProcessor:
             suffixes=["", "_purchase"],
         )
 
-        merged_df = merged_df.sort_values(by="item_id_purchase").drop_duplicates(
+        merged_df = merged_df.sort_values(
+            by=["timestamp", "timestamp_purchase", "item_id_purchase"]
+        ).drop_duplicates(
             subset=[
                 "event_name",
                 "item_id",
@@ -186,6 +225,12 @@ class ExperimentProcessor:
         return merged_df
 
     def label_experiments(self):
+        """
+        Etiqueta los experimentos en función de si resultaron en una compra.
+
+        Returns:
+            pd.DataFrame: DataFrame con etiquetas de si hubo compra.
+        """
         experiments = self.get_experimets_data()
         purchases = self.get_purchases_data()
 

@@ -8,6 +8,9 @@ pandas = "*"
 jupyter = "*"
 statsmodels = "*"
 flask = "*"
+pandasql = "*"
+matplotlib = "*"
+seaborn = "*"
 
 [dev-packages]
 
