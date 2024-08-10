@@ -8,6 +8,26 @@ from modules.utils.utils import convert_to_serializable
 
 
 def create_ab_test_api():
+    """
+    Crea y configura una API Flask para realizar análisis de experimentos A/B.
+
+    Esta función configura una instancia de Flask que maneja solicitudes HTTP 
+    relacionadas con la obtención de resultados de experimentos A/B. La API 
+    procesa los datos del experimento, ejecuta pruebas estadísticas, y devuelve 
+    los resultados en formato JSON.
+
+    Args:
+        None
+
+    Returns:
+        Flask: Una instancia de la aplicación Flask configurada para manejar 
+        las solicitudes relacionadas con los experimentos A/B.
+
+    Raises:
+        400: Si falta el parámetro `day` o si el formato de la fecha es inválido.
+        404: Si el experimento no se encuentra en los datos procesados.
+        500: Si ocurre un error inesperado durante el procesamiento de la solicitud.
+    """
     app = Flask(__name__)
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)

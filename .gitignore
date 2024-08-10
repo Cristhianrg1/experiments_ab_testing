@@ -9,3 +9,4 @@ __pycache__/*
 .vscode/launch.json
 manage.py
 logs/
+google_sa.json

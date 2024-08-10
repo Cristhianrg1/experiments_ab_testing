@@ -11,6 +11,8 @@ flask = "*"
 pandasql = "*"
 matplotlib = "*"
 seaborn = "*"
+google-cloud-storage = "*"
+python-dotenv = "*"
 
 [dev-packages]
 
