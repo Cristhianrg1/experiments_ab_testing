@@ -1,5 +1,7 @@
 from statsmodels.stats.power import NormalIndPower, GofChisquarePower
 
+from modules.utils.statistical_functions import normal_approximation
+
 
 class ChecksProcessor:
     """
@@ -84,16 +86,28 @@ class ChecksProcessor:
         independent = all(experiment_variants == 1)
         return independent
 
-    def check_variation(self):
+    def check_normal_approximation(self):
         """
-        Calcula la variación dentro de cada variante en términos de tasa de conversión.
+        Verifica si el experimento cumple con la distribución normal esperada. La 
+        aproximación normal debe ser igual o superior a 5 para cada muestra, en caso contrario
+        no se cumplieríia.
 
         Returns:
-            dict: Diccionario con la variación por cada variante.
+            bool: True si se cumple la normalidad aproximada, False en caso contrario.
         """
-        grouped = self.data.groupby("variant_id")["with_purchase"]
-        variations = grouped.apply(lambda x: x.mean() * (1 - x.mean()))
-        return variations.to_dict()
+        grouped = (
+            self.data.groupby("variant_id")
+            .agg(n=("variant_id", "count"), p=("with_purchase", "mean"))
+            .reset_index()
+        )
+
+        grouped["normal_approximation"] = grouped.apply(
+            lambda row: normal_approximation(row["n"], row["p"]), axis=1
+        )
+
+        norm = grouped["normal_approximation"].all()
+
+        return norm
 
     def check_sample_size(self, alpha=0.05, power=0.8, effect_size=0.2):
         """
@@ -153,6 +167,6 @@ class ChecksProcessor:
                 "num_of_variants": int(len(self.variants)),
                 "user_independence": self.check_user_independence(),
                 "experiment_independence": self.check_experiment_independence(),
-                "variations": self.check_variation(),
+                "normal_approximation": self.check_normal_approximation(),
                 "sample_size_adequacy": self.check_sample_size(alpha, power),
             }

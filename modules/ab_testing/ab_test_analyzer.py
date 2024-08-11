@@ -168,154 +168,6 @@ class ABTestAnalyzer:
         reject, pvals_corrected, _, _ = multipletests(pvals, method="bonferroni")
         return reject.tolist(), pvals_corrected.tolist()
 
-    def multi_variant_analysis(self):
-        """
-        Realiza un análisis de variantes múltiples, incluyendo ANOVA y pruebas de Tukey.
-
-        Returns:
-            tuple: Resultados por variante, tabla ANOVA y resultados de Tukey HSD.
-        """
-        results = {}
-        for variant in self.variants:
-            group = self.data[self.data["variant_id"] == variant]
-            prop = group["with_purchase"].mean()
-            se = np.sqrt(prop * (1 - prop) / len(group))
-            if np.isnan(se) or se == 0:
-                ci = (None, None)
-            else:
-                ci = norm.interval(0.95, loc=prop, scale=se)
-            results[variant] = {
-                "prop": prop,
-                "ci": list(ci),
-                "n": len(group),
-                "conversions": int(group["with_purchase"].sum()),
-            }
-
-        self.data["purchase"] = self.data["with_purchase"].astype(float)
-
-        model = ols("purchase ~ C(variant_id)", data=self.data).fit()
-        anova_table = sm.stats.anova_lm(model, typ=2)
-
-        tukey = pairwise_tukeyhsd(self.data["purchase"], self.data["variant_id"])
-
-        return results, anova_table, tukey
-
-    def pairwise_comparisons(self):
-        """
-        Realiza comparaciones por pares entre las variantes.
-
-        Returns:
-            list: Lista de diccionarios con las comparaciones por pares, efectos y p-valores.
-        """
-        comparisons = []
-
-        for i in range(len(self.variants)):
-            for j in range(i + 1, len(self.variants)):
-                group1 = self.data[self.data["variant_id"] == self.variants[i]]
-                group2 = self.data[self.data["variant_id"] == self.variants[j]]
-
-                effect = group2["with_purchase"].mean() - group1["with_purchase"].mean()
-                se = np.sqrt(
-                    group2["with_purchase"].var() / len(group2)
-                    + group1["with_purchase"].var() / len(group1)
-                )
-
-                if np.isnan(se) or se == 0:
-                    continue
-
-                t_stat = effect / se
-                df_total = len(group1) + len(group2) - 2
-                p_value = 2 * (1 - t.cdf(abs(t_stat), df_total))
-
-                comparisons.append(
-                    {
-                        "variant1": self.variants[i],
-                        "variant2": self.variants[j],
-                        "effect": effect,
-                        "p_value": p_value,
-                    }
-                )
-
-        return comparisons
-
-    def rubin_causal_model(self):
-        """
-        Realiza un análisis de efectos causales utilizando el modelo causal de Rubin.
-
-        Returns:
-            tuple: Resultados por variante y efectos causales entre variantes.
-        """
-        results = {}
-        for variant in self.variants:
-            group = self.data[self.data["variant_id"] == variant]
-            prop = group["with_purchase"].mean()
-            se = np.sqrt(prop * (1 - prop) / len(group))
-            if np.isnan(se) or se == 0:
-                ci = (None, None)
-            else:
-                ci = norm.interval(0.95, loc=prop, scale=se)
-            results[variant] = {
-                "prop": prop,
-                "ci": list(ci),
-                "n": len(group),
-                "conversions": int(group["with_purchase"].sum()),
-            }
-
-        causal_effects = {}
-        for i, v1 in enumerate(self.variants):
-            for v2 in self.variants[i + 1 :]:
-                effect = results[v2]["prop"] - results[v1]["prop"]
-                se = np.sqrt(
-                    results[v2]["prop"] * (1 - results[v2]["prop"]) / results[v2]["n"]
-                    + results[v1]["prop"] * (1 - results[v1]["prop"]) / results[v1]["n"]
-                )
-                if np.isnan(se) or se == 0:
-                    ci = (None, None)
-                else:
-                    ci = norm.interval(0.95, loc=effect, scale=se)
-                causal_effects[f"{v1} vs {v2}"] = {"effect": effect, "ci": ci}
-
-        return results, causal_effects
-
-    def average_treatment_effect(self):
-        """
-        Calcula el Efecto Medio del Tratamiento (ATE) entre dos variantes.
-
-        Returns:
-            dict: Resultados del ATE incluyendo el intervalo de confianza.
-        """
-        if len(self.variants) != 2:
-            raise ValueError(
-                "ATE is typically calculated for two variants. Use pairwise comparisons for multiple variants."
-            )
-
-        control = self.variants[0]
-        treatment = self.variants[1]
-
-        control_data = self.data[self.data["variant_id"] == control]
-        treatment_data = self.data[self.data["variant_id"] == treatment]
-
-        control_mean = control_data["with_purchase"].mean()
-        treatment_mean = treatment_data["with_purchase"].mean()
-
-        ate = treatment_mean - control_mean
-
-        se = np.sqrt(
-            treatment_mean * (1 - treatment_mean) / len(treatment_data)
-            + control_mean * (1 - control_mean) / len(control_data)
-        )
-        if np.isnan(se) or se == 0:
-            ci = (None, None)
-        else:
-            ci = norm.interval(0.95, loc=ate, scale=se)
-
-        return {
-            "ate": ate,
-            "ci": list(ci),
-            "control_mean": control_mean,
-            "treatment_mean": treatment_mean,
-        }
-
     def _determine_winner_one_variants(self):
         """
         Determina la variante ganadora en un experimento con una sola variante.
@@ -352,10 +204,6 @@ class ABTestAnalyzer:
         z_stat, pval, ci = self.z_test(winner)
         significant_difference = pval < 0.05
 
-        ate_results = self.average_treatment_effect()
-
-        rcm_results, causal_effects = self.rubin_causal_model()
-
         return {
             "winner": winner,
             "tests": {
@@ -365,9 +213,6 @@ class ABTestAnalyzer:
                     "z_statistic": z_stat,
                     "ci": ci,
                 },
-                "average_treatment_effect": ate_results,
-                "rubin_causal_model": rcm_results,
-                "causal_effects": causal_effects,
             },
         }
 
@@ -409,9 +254,6 @@ class ABTestAnalyzer:
             rates = self.data.groupby("variant_id")["with_purchase"].mean()
             winner = rates.idxmax()
 
-        variant_results, anova_table, tukey = self.multi_variant_analysis()
-        pairwise_comp = self.pairwise_comparisons()
-
         return {
             "winner": winner,
             "tests": {
@@ -420,13 +262,6 @@ class ABTestAnalyzer:
                     "p_value": pval,
                     "significant_difference": significant_difference,
                 },
-                "variant_results": variant_results,
-                "anova": {
-                    "f_value": float(anova_table.loc["C(variant_id)", "F"]),
-                    "p_value": float(anova_table.loc["C(variant_id)", "PR(>F)"]),
-                },
-                "tukey_hsd": tukey.summary().data[1:],
-                "pairwise_comparisons": pairwise_comp,
             },
         }
 
