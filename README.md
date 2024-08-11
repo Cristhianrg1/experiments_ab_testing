@@ -154,7 +154,7 @@ Este proyecto puede ser configurado y ejecutado de dos maneras: usando Pipenv o 
 
 ### Requisitos Previos
 
-- Python 3.x
+- Python
 - Git
 - Docker
 
