@@ -1,11 +1,8 @@
 import pandas as pd
 import numpy as np
-from scipy.stats import chi2_contingency, norm, t
+from scipy.stats import chi2_contingency, norm
 from statsmodels.stats.proportion import proportions_ztest
 from statsmodels.stats.multitest import multipletests
-import statsmodels.api as sm
-from statsmodels.formula.api import ols
-from statsmodels.stats.multicomp import pairwise_tukeyhsd
 
 
 class ABTestAnalyzer:
