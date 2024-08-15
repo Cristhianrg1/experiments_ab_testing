@@ -12,6 +12,7 @@
 5. [Instrucciones de Instalación y Uso](#instrucciones-de-instalación-y-uso)
 6. [Consideraciones y Tradeoffs](#consideraciones-y-tradeoffs)
 7. [Documentación de la API](#docuemtación-de-la-api)
+8. [Referecias](#referencias)
 
 ## Introducción
 
@@ -36,7 +37,7 @@ Este proyecto permite procesar y analizar datos de experimentos relacionados con
   - **ab_testing:**
     - **ab_test_analyzer.py:** Módulo para analizar los resultados de las pruebas A/B.
     - **ab_test_manager.py:** Módulo para gestionar las pruebas A/B.
-    - **checks_processor.py:** Módulo para procesar los cheques de las pruebas.
+    - **checks_processor.py:** Módulo para procesar los checks de las pruebas.
   - **data_processing:**
     - **data_loader.py:** Módulo para cargar los datos.
     - **data_processor.py:** Módulo para procesar los datos.
@@ -86,7 +87,13 @@ Este proyecto permite procesar y analizar datos de experimentos relacionados con
 
 - **Independencia de usuarios en las variantes:**
 
-  - Se aplicó un check que permitira identificar si dentro del mismo experimento el usuario estaba en dos variantes, esto al ser verdadero haría que de cierta forma se invalide el experimento ya que se están duplicando los resultados de ciertos clientes estando en las dos variates a probar.
+  - Se aplicó un check que permitira identificar si dentro del mismo experimento el usuario estaba en dos variantes, en principio se podría pensar en invalidar el experimento, pero para evitar esto, es posible aplicar una serie de técnicas que podrían ayudar a dar validez al experimento:
+    
+    - Análisis de Sensibilidad: Realizar un análisis de sensibilidad para comparar los resultados con y sin los usuarios duplicados. Esto te permitirá entender el impacto de estos duplicados en los resultados del experimento.
+    - Ponderación: Aplica técnicas estadísticas para ajustar los resultados teniendo en cuenta los usuarios que participaron en más de una variante. Una técnica podría ser ponderar menos a los usuarios que participaron en varias variantes.
+    - Asignación basada en máxima probabilidad: Usar un modelo predictivo para calcular la probabilidad de que el usuario perteneza a uno o a otra variante, de acuerdo a esta probabilidad, asignar el usuario a la variante más probable.
+
+
 
 
 - **Exposición experimentos en distintos eventos:**
@@ -105,13 +112,15 @@ En el análisis de experimentos, se utilizó un enfoque mixto para probar la sig
 
 - Prueba z-test para Experimentos con Dos Variantes:
 
-  Cuando un experimento involucraba solo dos variantes, se utilizó una prueba de proporciones z-test. Esta prueba permite comparar las tasas de conversión entre dos variantes y determinar si la diferencia observada es estadísticamente significativa.
+  Como se menciona en el artículo "A/B testing: A systematic literature review" (Quin, Weyns, Galster, & Costa Silva, 2024), los métodos más comunes para la evaluación de A/B testing siguen siendo las pruebas de hipótesis clásicas. En este caso, al tratarse de un problema de proporcionalidad, se hizo uso de la prueba z-test, que es adecuada para comparar tasas de conversión entre dos variantes y determinar si la diferencia observada es estadísticamente significativa.
 
 - Prueba chi-square para Experimentos con Más de Dos Variantes:
 
-  Para experimentos con más de dos variantes, se utilizó la prueba de independencia chi-square. Esta prueba es útil para determinar si hay diferencias significativas en las tasas de conversión entre todas las variantes de un experimento. Sin embargo, la prueba chi-square solo te dice si hay alguna diferencia significativa entre las variantes, pero no especifica cuáles variantes son significativamente diferentes entre sí.
+  Para experimentos con más de dos variantes, se utilizó la prueba de independencia chi-square. Esta prueba es útil para determinar si hay diferencias significativas en las tasas de conversión entre todas las variantes de un experimento. Sin embargo, la prueba chi-square solo indica si existe alguna diferencia significativa entre las variantes, pero no especifica cuáles variantes son significativamente diferentes entre sí.
 
-  Para resolver esto se hizo una prueba post-hoc, en donde se comparan las variantes de forma pareada, haciendo las combinaciones y evaluando para cada par el z-test, luego se aplicó un multipletes con método bonferroni que permite hacer correcciones y evitar errores de tipo 1.
+  Para resolver esto, se realizó una prueba post-hoc en la que se compararon las variantes de forma pareada, haciendo las combinaciones y evaluando para cada par el z-test. Luego, se aplicó una corrección para múltiples pruebas utilizando el método Bonferroni, lo que permitió hacer ajustes y evitar errores de tipo I, asegurando así que las conclusiones fueran estadísticamente válidas (Vickerstaff, Omar, & Ambler, 2019).
+
+  Este enfoque está respaldado por García-Pérez (2023), quien discute la importancia de aplicar correcciones como Bonferroni para controlar la tasa de error de tipo I en escenarios de múltiples pruebas, como en análisis post-hoc tras una prueba chi-square. La corrección asegura que el riesgo de identificar falsos positivos se mantenga bajo control, garantizando la validez de las comparaciones entre variantes.
 
 
 ## Resultados
@@ -285,4 +294,10 @@ Con el desarrollo de esta prueba, se pudo evidenciar que aún cuando el dataset 
 
 - Se deberia evaluar el impacto económico que generan estas soliciones y comparar vs los costos que pueden llegar a tener el implementar nuevas herramientas y uso de servicios en la nube, esto permitiría comparar si realmente es beneficioso.
 
-### Docuemtación de la API
+### Docuetación de la API
+
+### Referencias
+
+- Quin, F., Weyns, D., Galster, M., & Costa Silva, C. (2024). "A/B testing: A systematic literature review". *Journal of Systems and Software*. https://doi.org/10.1016/j.jss.2024.112011
+- García-Pérez, M. A. (2023). "Use and misuse of corrections for multiple testing". *Methods in Psychology, 8*, 100120. https://doi.org/10.1016/j.metip.2023.100120
+- Vickerstaff, V., Omar, R. Z., & Ambler, G. (2019). "Methods to adjust for multiple comparisons in the analysis and sample size calculation of randomised controlled trials with multiple primary outcomes". *BMC Medical Research Methodology*. https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-019-0754-4
