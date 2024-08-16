@@ -231,35 +231,13 @@ Nota: Se puede cambiar el puerto 8080 por cualquier otro puerto según la necesi
 Ejemplo: `5001:5000` disponibiliza el puerto 5001 en el servidor local y se comunica con el puerto 8080 del contenedor.
 
 
-### Ejemplo uso de la api (Local)
+### Ejemplo uso de la api 
+
+- #### Local
 
 1. CURL
 ```bash
 curl -X  GET 'http://127.0.0.1:8080/experiment/filters%2Fsort-by-ranking/result?day=2021-08-02+00'
-
-# Respuesta
-{
-  "results": {
-    "filters/sort-by-ranking": {,
-      "number_of_participants": 4972,
-      "variants": [
-        {
-          "id": "7057",
-          "number_of_purchases": 149
-        },
-        {
-          "id": "6971",
-          "number_of_purchases": 156
-        },
-        {
-          "id": "6972",
-          "number_of_purchases": 177
-        }
-      ],
-      "winner": "6972"
-    }
-  }
-}
 ```
 
 2. Python
@@ -281,7 +259,7 @@ response.json()
 ```
 
 
-### Ejemplo Uso de la API (Hosteada)
+- #### Hosteada
 
 Para consultar el servicio es importante tener las credenciales compartidas, como se mencionó en [la configuración del entorno](#configurar-entorno), donde se creo una variable de entorno y se guardó el archivo con el nombre google_sa.json, estas credenciales permitirán hacer uso de la API.
 
@@ -316,6 +294,37 @@ response = requests.get(url, params=params, headers=headers)
 response.json()
 ```
 
+#### Respuesta
+```bash
+{
+  'results': {
+    'filters/sort-by-ranking': {
+      'checks': {
+        'experiment_independence': True,
+        'normal_approximation': True,
+        'num_of_variants': 3,
+        'sample_size_adequacy': {'6971': True, '6972': True, '7057': True},
+        'user_independence': False
+      },
+    'number_of_participants': 5629,
+    'statistical_tests': {
+          'chi_square': {
+            'chi2': 2.549391302369261,
+            'p_value': 0.2795160256484701,
+            'significant_difference': False
+          }
+      },
+    'variants': [
+        {'id': '6971', 'number_of_purchases': 159},
+        {'id': '6972', 'number_of_purchases': 173},
+        {'id': '7057', 'number_of_purchases': 146}
+      ],
+    'winner': '6972'
+    }
+  }
+}
+```
+
 ### Consideraciones y tradeoffs
 
 Con el desarrollo de esta prueba, se pudo evidenciar que aún cuando el dataset no es de un tamaño sobredimensionado, es necesario implementar algunas mejoras dentro del proceso, son las siguientes:
@@ -329,8 +338,6 @@ Con el desarrollo de esta prueba, se pudo evidenciar que aún cuando el dataset 
 - Mantener la API en un sistema como por ejemplo Cloud RUN, que permite montar la API teniendo creado el contenedor de Docker, y a su vez ayuda a escalar de mejor manera dicha API.
 
 - Se deberia evaluar el impacto económico que generan estas soliciones y comparar vs los costos que pueden llegar a tener el implementar nuevas herramientas y uso de servicios en la nube, esto permitiría comparar si realmente es beneficioso.
-
-### Documentación de la API
 
 ### Referencias
 
