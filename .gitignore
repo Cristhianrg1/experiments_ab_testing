@@ -10,3 +10,4 @@ __pycache__/*
 manage.py
 logs/
 google_sa.json
+.dockerignore

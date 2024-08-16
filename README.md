@@ -225,17 +225,17 @@ docker build -t <nombre-imagen> .
 
 2. Ejecutar contenedor
 ```bash
-docker run -it --rm -p 5000:5000 <nombre-imagen>
+docker run -it --rm -p 8080:8080 <nombre-imagen>
 ```
-Nota: Se puede cambiar el puerto 5000 por cualquier otro puerto según la necesidad y disponibilidad.  
-Ejemplo: `5001:5000` disponibiliza el puerto 5001 en el servidor local y se comunica con el puerto 5000 del contenedor.
+Nota: Se puede cambiar el puerto 8080 por cualquier otro puerto según la necesidad y disponibilidad.  
+Ejemplo: `5001:5000` disponibiliza el puerto 5001 en el servidor local y se comunica con el puerto 8080 del contenedor.
 
 
 ### Ejemplo uso de la api
 
 1. CURL
 ```bash
-curl -X  GET 'http://127.0.0.1:5001/experiment/filters%2Fsort-by-ranking/result?day=2021-08-02+00'
+curl -X  GET 'http://127.0.0.1:8080/experiment/filters%2Fsort-by-ranking/result?day=2021-08-02+00'
 
 # Respuesta
 {
@@ -271,12 +271,46 @@ from urllib.parse import quote
 experiment_id = "filters/sort-by-ranking"
 day = "2021-08-02 00"
 encoded_experiment_id = quote(experiment_id, safe='')
-url = f"http://127.0.0.1:5000/experiment/{encoded_experiment_id}/result"
+url = f"http://127.0.0.1:8080/experiment/{encoded_experiment_id}/result"
 params = {
     "day": day
 }
 
 response = requests.get(url, params=params)
+response.json()
+```
+
+
+### Ejemplo Uso de la api ejecutada en cloud
+
+```python
+import os
+import requests
+from urllib.parse import quote
+
+from google.auth.transport.requests import Request
+from google.oauth2 import service_account
+
+SERVICE_ACCOUNT_FILE = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+URL = 'https://ab-test-api-gfeygdcx7a-uc.a.run.app'
+
+credentials = service_account.IDTokenCredentials.from_service_account_file(
+    SERVICE_ACCOUNT_FILE,
+    target_audience=URL
+)
+credentials.refresh(Request())
+token = credentials.token
+
+experiment_id = "filters/sort-by-ranking"
+day = "2021-08-02 00"
+encoded_experiment_id = quote(experiment_id, safe='')
+headers = {"Authorization": f"Bearer {token}"}
+url = f"https://ab-test-api-gfeygdcx7a-uc.a.run.app/experiment/{encoded_experiment_id}/result"
+params = {
+    "day": day
+}
+
+response = requests.get(url, params=params, headers=headers)
 response.json()
 ```
 
@@ -294,7 +328,7 @@ Con el desarrollo de esta prueba, se pudo evidenciar que aún cuando el dataset 
 
 - Se deberia evaluar el impacto económico que generan estas soliciones y comparar vs los costos que pueden llegar a tener el implementar nuevas herramientas y uso de servicios en la nube, esto permitiría comparar si realmente es beneficioso.
 
-### Docuetación de la API
+### Documentación de la API
 
 ### Referencias
 

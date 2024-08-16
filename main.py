@@ -1,10 +1,14 @@
+import os
 import logging
 import argparse
-from api.ab_testing_api import create_ab_test_api
 from flask import request, jsonify
+from dotenv import load_dotenv
+
+from api.ab_testing_api import create_ab_test_api
 
 
 def parse_arguments():
+    load_dotenv()
     parser = argparse.ArgumentParser(description="Run A/B Test API")
     parser.add_argument(
         "--host",
@@ -13,7 +17,10 @@ def parse_arguments():
         help="Host for the API server (default: 0.0.0.0)",
     )
     parser.add_argument(
-        "--port", type=int, default=5000, help="Port for the API server (default: 5000)"
+        "--port",
+        type=int,
+        default=int(os.getenv("PORT", 8080)),
+        help="Port for the API server (default: 8080)",
     )
     return parser.parse_args()
 
@@ -24,6 +31,9 @@ def setup_logging():
     )
     return logging.getLogger(__name__)
 
+
+def is_development():
+    return os.getenv('ENV', 'production').lower() == 'local'
 
 def main():
     logger = setup_logging()
@@ -40,8 +50,9 @@ def main():
     def handle_exception(e):
         logger.exception("An error occurred:")
         return jsonify({"error": "An unexpected error occurred"}), 500
-
-    app.run(host=args.host, port=args.port, debug=True)
+    
+    debug_mode = is_development()
+    app.run(host=args.host, port=args.port, debug=debug_mode)
 
 
 if __name__ == "__main__":
