@@ -231,7 +231,7 @@ Nota: Se puede cambiar el puerto 8080 por cualquier otro puerto según la necesi
 Ejemplo: `5001:5000` disponibiliza el puerto 5001 en el servidor local y se comunica con el puerto 8080 del contenedor.
 
 
-### Ejemplo uso de la api
+### Ejemplo uso de la api (Local)
 
 1. CURL
 ```bash
@@ -281,7 +281,9 @@ response.json()
 ```
 
 
-### Ejemplo Uso de la api ejecutada en cloud
+### Ejemplo Uso de la API (Hosteada)
+
+Para consultar el servicio es importante tener las credenciales compartidas, como se mencionó en [la configuración del entorno](#configurar-entorno), donde se creo una variable de entorno y se guardó el archivo con el nombre google_sa.json, estas credenciales permitirán hacer uso de la API.
 
 ```python
 import os
