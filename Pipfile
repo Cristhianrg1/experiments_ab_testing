@@ -13,6 +13,7 @@ matplotlib = "*"
 seaborn = "*"
 google-cloud-storage = "*"
 python-dotenv = "*"
+flasgger = "*"
 
 [dev-packages]
 

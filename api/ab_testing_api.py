@@ -1,7 +1,9 @@
-from flask import Flask, request, jsonify
 from datetime import datetime
 from urllib.parse import unquote
 import logging
+
+from flask import Flask, request, jsonify
+
 from modules.data_processing.data_loader import load_and_process_data
 from modules.ab_testing.ab_test_manager import ABTestManager
 from modules.utils.utils import convert_to_serializable
