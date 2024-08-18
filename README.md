@@ -112,7 +112,7 @@ En el análisis de experimentos, se utilizó un enfoque mixto para probar la sig
 
 - Prueba z-test para Experimentos con Dos Variantes:
 
-  Como se menciona en el artículo "A/B testing: A systematic literature review" (Quin, Weyns, Galster, & Costa Silva, 2024), los métodos más comunes para la evaluación de A/B testing siguen siendo las pruebas de hipótesis clásicas. En este caso, al tratarse de un problema de proporcionalidad, se hizo uso de la prueba z-test, que es adecuada para comparar tasas de conversión entre dos variantes y determinar si la diferencia observada es estadísticamente significativa.
+  Como se menciona en el artículo "A/B testing: A systematic literature review" (Quin, Weyns, Galster, & Costa Silva, 2024), los métodos más comunes para la evaluación de A/B testing siguen siendo las pruebas de hipótesis clásicas. En este caso, al tratarse de un problema de proporcionalidad, se hizo uso de la prueba z-test, que es adecuada para comparar tasas de conversión entre dos variantes y determinar si la diferencia observada es estadísticamente significativa. Este enfoque está respaldado adicionalmente por Aslam (2024), quien discute la efectividad del Z-test clásico en el análisis de datos bien definidos, asegurando un control robusto del error Tipo I y la validez estadística en contextos donde los datos no presentan indeterminaciones significativas.
 
 - Prueba chi-square para Experimentos con Más de Dos Variantes:
 
@@ -120,7 +120,7 @@ En el análisis de experimentos, se utilizó un enfoque mixto para probar la sig
 
   Para resolver esto, se realizó una prueba post-hoc en la que se compararon las variantes de forma pareada, haciendo las combinaciones y evaluando para cada par el z-test. Luego, se aplicó una corrección para múltiples pruebas utilizando el método Bonferroni, lo que permitió hacer ajustes y evitar errores de tipo I, asegurando así que las conclusiones fueran estadísticamente válidas (Vickerstaff, Omar, & Ambler, 2019).
 
-  Este enfoque está respaldado por García-Pérez (2023), quien discute la importancia de aplicar correcciones como Bonferroni para controlar la tasa de error de tipo I en escenarios de múltiples pruebas, como en análisis post-hoc tras una prueba chi-square. La corrección asegura que el riesgo de identificar falsos positivos se mantenga bajo control, garantizando la validez de las comparaciones entre variantes.
+  Este enfoque está respaldado por García-Pérez (2023), quien discute la importancia de aplicar correcciones como Bonferroni para controlar la tasa de error de tipo I en escenarios de múltiples pruebas, como en análisis post-hoc tras una prueba chi-square. Además, Shan y Gerstenberger (2017) proponen un enfoque exacto para el análisis post-hoc después de una prueba chi-square, subrayando la necesidad de métodos robustos para garantizar la validez estadística, incluso en estudios con gran cantidad de datos. Estos métodos aseguran que el riesgo de identificar falsos positivos se mantenga bajo control, garantizando la validez de las comparaciones entre variantes.
 
 
 ## Resultados
@@ -294,7 +294,7 @@ response = requests.get(url, params=params, headers=headers)
 response.json()
 ```
 
-#### Respuesta
+- #### Respuesta
 ```bash
 {
   'results': {
@@ -343,4 +343,6 @@ Con el desarrollo de esta prueba, se pudo evidenciar que aún cuando el dataset 
 
 - Quin, F., Weyns, D., Galster, M., & Costa Silva, C. (2024). "A/B testing: A systematic literature review". *Journal of Systems and Software*. https://doi.org/10.1016/j.jss.2024.112011
 - García-Pérez, M. A. (2023). "Use and misuse of corrections for multiple testing". *Methods in Psychology, 8*, 100120. https://doi.org/10.1016/j.metip.2023.100120
+- Shan, G., & Gerstenberger, S. (2017). Fisher’s exact approach for post hoc analysis of a chi-squared test. PLOS ONE, 12(12), e0188709. https://doi.org/10.1371/journal.pone.0188709
 - Vickerstaff, V., Omar, R. Z., & Ambler, G. (2019). "Methods to adjust for multiple comparisons in the analysis and sample size calculation of randomised controlled trials with multiple primary outcomes". *BMC Medical Research Methodology*. https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/s12874-019-0754-4
+- Aslam, M. (2024). Analysis of imprecise measurement data utilizing Z-test for correlation. Journal of Big Data, 11(4), 1-10. https://doi.org/10.1186/s40537-023-00873-7
